@@ -279,7 +279,26 @@ export async function getPostById(postId: string){
   }
 }
 export async function updatePost(post: IUpdatePost) {
+  const hasFileToUpdate = post.file.length > 0;
   try {
+    let image = {
+      imageURL: post.imageURL,
+      imageId: post.imageId
+    }
+
+    if(hasFileToUpdate){
+      const uploadedFile = await uploadFile(post.file[0]);
+
+      if (!uploadedFile) throw Error;
+
+      const fileUrl = getFilePreview(uploadedFile.$id);
+      if (!fileUrl) {
+      await deleteFile(uploadedFile.$id);
+      throw Error;
+    }
+    image = {...image, imageURL: fileUrl, imageId: uploadedFile.$id }
+    }
+
     const tags = post.tags?.replace(/ /g, "").split(",") || [];
 
     //  Update post
@@ -290,6 +309,8 @@ export async function updatePost(post: IUpdatePost) {
       {
         caption: post.caption,
         location: post.location,
+        imageURL: image.imageURL,
+        imageId: image.imageId,
         tags: tags,
       }
     );
