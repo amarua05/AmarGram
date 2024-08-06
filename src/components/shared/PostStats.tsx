@@ -6,25 +6,25 @@ import Loader from './Loader'
 import { Link } from 'react-router-dom'
 
 type PostStatsProps = {
-    post: Models.Document,
-    userId: string
+    post?: Models.Document;
+    userId: string;
 }
 
 const PostStats = ({post, userId}: PostStatsProps) => {
-    const likesList = post.likes.map((user: Models.Document) => user.$id)
+    const likesList = post?.likes.map((user: Models.Document) => user.$id);
 
-    const [likes, setLikes] = useState(likesList)
-    const [isSaved, setIsSaved] = useState(false)
+    const [likes, setLikes] = useState<string[]>(likesList);
+    const [isSaved, setIsSaved] = useState(false);
 
-    const {mutate: likePost} = useLikePost()
-    const {mutate: savePost, isPending: isSavingPost} = useSavePost()
-    const {mutate: unsavePost, isPending: isUnsavingPost} = useUnsavePost()
+    const {mutate: likePost} = useLikePost();
+    const {mutate: savePost, isPending: isSavingPost} = useSavePost();
+    const {mutate: unsavePost, isPending: isUnsavingPost} = useUnsavePost();
     
-    const {data: currentUser} = useGetCurrentUser()
-    const savedPostRecord = currentUser?.save.find((record: Models.Document) => record.post.$id === post.$id)
+    const {data: currentUser} = useGetCurrentUser();
+    const savedPostRecord = currentUser?.save.find((record: Models.Document) => record.post.$id === post?.$id);
 
     useEffect(() => {
-     setIsSaved(!!savedPostRecord)
+     setIsSaved(!!savedPostRecord);
     },[currentUser])
     const handleLikePost = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -38,7 +38,7 @@ const PostStats = ({post, userId}: PostStatsProps) => {
             newLikes.push(userId)
         }
         setLikes(newLikes)
-        likePost({postId: post.$id, likesArray: newLikes})
+        likePost({postId: post?.$id || '', likesArray: newLikes})
     }
     const handleSavePost = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -48,7 +48,7 @@ const PostStats = ({post, userId}: PostStatsProps) => {
             setIsSaved(false)
             unsavePost(savedPostRecord.$id)
         } else{
-            savePost({postId: post.$id, userId})
+            savePost({postId: post?.$id || '', userId})
             setIsSaved(true)
         }
     }
@@ -66,7 +66,7 @@ const PostStats = ({post, userId}: PostStatsProps) => {
         <p className='small-medium lg:base-medium'>{likes.length}</p>
      </div>
      <div className='flex gap-2 mr-5'>
-        <Link to={`/${post.creator.username}/posts/${post.$id}`}>
+        <Link to={`/${post?.creator.username}/posts/${post?.$id}`}>
             <img src="/assets/icons/comment.svg" 
                 alt="Comment"
                 width={20}
@@ -84,4 +84,4 @@ const PostStats = ({post, userId}: PostStatsProps) => {
   )
 }
 
-export default PostStats
+export default PostStats;
