@@ -39,7 +39,7 @@ const EditPost = () => {
       return (
         <div className="flex flex-col items-center text-center justify-center w-full">
           <div>
-          <h2>Unauthorized Access</h2>
+          <h2>(401) Unauthorized Access</h2>
           <p>You do not have permission to edit this post.</p>
           </div>
           <br />
