@@ -3,6 +3,7 @@ import { checkIsLiked } from '@/lib/utils'
 import { Models } from 'appwrite'
 import React, { useEffect, useState } from 'react'
 import Loader from './Loader'
+import { Link } from 'react-router-dom'
 
 type PostStatsProps = {
     post: Models.Document,
@@ -51,7 +52,6 @@ const PostStats = ({post, userId}: PostStatsProps) => {
             setIsSaved(true)
         }
     }
-
   return (
     <div className='flex justify-between items-center z-20'>
      <div className='flex gap-2 mr-5'>
@@ -66,11 +66,13 @@ const PostStats = ({post, userId}: PostStatsProps) => {
         <p className='small-medium lg:base-medium'>{likes.length}</p>
      </div>
      <div className='flex gap-2 mr-5'>
+        <Link to={`/${post.creator.username}/posts/${post.$id}`}>
             <img src="/assets/icons/comment.svg" 
                 alt="Comment"
                 width={20}
                 height={20}
                 className='cursor-pointer' />
+        </Link>
      </div>
      <div className='flex gap-2 mr-5'>{isSavingPost || isUnsavingPost ? <Loader /> :
         <img src={isSaved ? '/assets/icons/saved.svg' : '/assets/icons/save.svg'} 
