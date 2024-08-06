@@ -43,7 +43,7 @@ AmarGram is a social media web application built with modern web technologies, o
 
 ## Configuration
 
-To customize the configuration of AmarGram, modify the environment variables in the `.env` file located in the root directory:
+To customize the configuration of AmarGram, modify the environment variables in the `.env.local` file:
 
 ```plaintext
 VITE_APPWRITE_URL = 'https://cloud.appwrite.io/v1'
