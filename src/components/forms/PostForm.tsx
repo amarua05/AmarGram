@@ -48,7 +48,7 @@
     // Handler
     const handleSubmit = async (value: z.infer<typeof postValidation>) => {
       // ACTION = UPDATE
-      if (post && action === "Update") {
+      if (post && action === "Update" && user.id == post.creator.id) {
         const updatedPost = await updatePost({
           ...value,
           postId: post.$id,
@@ -61,7 +61,7 @@
             title: `${action} post failed. Please try again.`,
           });
         }
-        return navigate(`/${user.username}/posts/${post.$id}`);
+        return navigate(`/${post?.creator.username}/posts/${post.$id}`);
       }
 
       // ACTION = CREATE
