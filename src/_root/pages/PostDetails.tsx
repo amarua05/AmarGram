@@ -12,6 +12,9 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Comments from "./Comments";
 import { Models } from "appwrite";
 
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
+
+
 const PostDetails = () => {
   const { id } = useParams();
   const { data: post, isPending } = useGetPostById(id || "");
@@ -96,7 +99,7 @@ const PostDetails = () => {
             <div className="flex flex-col flex-1 w-full small-medium lg:base-regular">
               <p className="base-medium lg:body-bold text-light-1">
                 {post?.caption}
-              </p>
+              </p>     
               <ul className={`flex gap-1 mt-2 ${post?.tags == 0 && "hidden"}`}>
                 {post?.tags.map((tag: string, index: string) => (
                   <li
@@ -108,31 +111,34 @@ const PostDetails = () => {
                 ))}
               </ul>
             </div>
+
+
+
             <div className="w-full">
               <PostStats post={post} userId={user.id} />
               <Comments />
               {isCommentLoading && !comments ? (
                 <Loader />
               ) : (
-                <ul className="flex flex-col flex-1 gap-9 w-full">
+                <ul className="w-full max-w-2xl mx-auto py-8">
                   {post?.comment.map((comment: Models.Document) => (
-                    <div>
-                      <li
-                        key={`${comment}`}
-                        className="text-light-1 medium-regular font-bold"
-                      >
-                        <img
-                          src={
-                            comment.user.imageURL ||
-                            "/assets/icons/profile-placeholder.svg"
-                          }
-                          className="w-8 lg:h-8 rounded-full"
-                          alt="user profile"
-                        />
-                        @{comment.username}
-                      </li>
-                      <li key={`${comment.comment}`} className="text-light-1 font-light text-base">{comment.comment}</li>
-                      <hr className="border w-full border-dark-4/80" />
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-4">
+                          <Avatar className="w-10 h-10 border border-muted-foreground/20">
+                            <AvatarImage src={comment.user.imageURL || "/assets/icons/profile-placeholder.svg"}></AvatarImage>
+                          </Avatar>
+                          <div>
+                          <div className="bg-muted rounded-md p-4 flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="font-medium">{comment.user.username}</div>
+                              <div className="text-xs text-muted-foreground">{timeAgo(comment.$createdAt || "")}</div>
+                            </div>
+                            <p>{comment.comment}</p>
+                          </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </ul>
