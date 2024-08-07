@@ -16,3 +16,7 @@ export const signupValidation = z.object({
     location: z.string().min(2).max(100),
     tags: z.string()
   })
+  export const commentValidation = z.object({  
+    comment: z.string().min(1, {message: 'Comment must have at least 1 character.'}).max(220),
+    post:z.string(),
+  })

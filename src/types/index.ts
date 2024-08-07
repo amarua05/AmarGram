@@ -47,3 +47,10 @@
     username: string;
     password: string;
   };
+
+  export type INewComment = {
+    comment: string;
+    post: string;
+    user: string;
+    username: string;
+  }

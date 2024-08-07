@@ -1,6 +1,6 @@
 import { ID, ImageGravity, Query } from "appwrite";
 import { appwriteConfig, account, databases, storage, avatars } from "./config";
-import { INewPost, INewUser, IUpdatePost } from "@/types";
+import { INewComment, INewPost, INewUser, IUpdatePost } from "@/types";
 
 // ============================================================
 // AUTH
@@ -335,5 +335,40 @@ export async function deletePost(postId: string, imageId: string){
     )
   } catch (error) {
     
+  }
+}
+
+//  Comments
+export async function createComment(comment: INewComment){
+  try {
+    const newComment = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      ID.unique(),
+      {
+        comment: comment.comment,
+        user: comment.user,
+        post: comment.post,
+        username: comment.username
+      }
+    )
+    if(!newComment){
+      throw Error;
+    }
+    return newComment;
+  } catch (error) {
+    console.log(error)
+  }
+}
+export async function getComments(){
+  try {
+    const comments = databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      [Query.orderDesc('$createdAt'), Query.limit(30)]
+    )
+  return comments;
+  } catch (error) {
+     console.log(error);  
   }
 }

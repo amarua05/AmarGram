@@ -12,7 +12,9 @@ type PostStatsProps = {
 
 const PostStats = ({post, userId}: PostStatsProps) => {
     const likesList = post?.likes.map((user: Models.Document) => user.$id);
+    const commentsList = post?.comment.map((user:Models.Document) => user.$id);
 
+    const [comments] = useState<string[]>(commentsList);
     const [likes, setLikes] = useState<string[]>(likesList);
     const [isSaved, setIsSaved] = useState(false);
 
@@ -73,6 +75,7 @@ const PostStats = ({post, userId}: PostStatsProps) => {
                 height={20}
                 className='cursor-pointer' />
         </Link>
+        <p className='small-medium lg:base-medium'>{comments.length}</p>
      </div>
      <div className='flex gap-2 mr-5'>{isSavingPost || isUnsavingPost ? <Loader /> :
         <img src={isSaved ? '/assets/icons/saved.svg' : '/assets/icons/save.svg'} 
