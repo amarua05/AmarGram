@@ -205,6 +205,8 @@ export async function deleteFile(fileId: string) {
     console.log(error);
   }
 }
+
+
 export async function getRecentPosts(){
   const posts = await databases.listDocuments(
     appwriteConfig.databaseId,
@@ -215,6 +217,7 @@ export async function getRecentPosts(){
 
   return posts
 }
+
 
 export async function likePost(postId: string, likesArray: string[]){
   try {
@@ -233,6 +236,8 @@ export async function likePost(postId: string, likesArray: string[]){
     console.log(error)
   }
 }
+
+
 export async function savePost(postId: string, userId: string){
   try {
     const updatedPost = await databases.createDocument(
@@ -251,6 +256,8 @@ export async function savePost(postId: string, userId: string){
     console.log(error)
   }
 }
+
+
 export async function unsavePost(savedRecordId: string){
   try {
     const statusCode = await databases.deleteDocument(
@@ -265,6 +272,8 @@ export async function unsavePost(savedRecordId: string){
     console.log(error)
   }
 }
+
+
 export async function getPostById(postId: string){
   try {
     const post = databases.getDocument(
@@ -278,6 +287,8 @@ export async function getPostById(postId: string){
     console.log(error)
   }
 }
+
+
 export async function updatePost(post: IUpdatePost) {
   const hasFileToUpdate = post.file.length > 0;
   try {
@@ -325,6 +336,8 @@ export async function updatePost(post: IUpdatePost) {
     console.log(error);
   }
 }
+
+
 export async function deletePost(postId: string, imageId: string){
   if(!postId || !imageId) throw Error;
   try {
@@ -360,6 +373,8 @@ export async function createComment(comment: INewComment){
     console.log(error)
   }
 }
+
+
 export async function getComments(){
   try {
     const comments = databases.listDocuments(
@@ -370,5 +385,43 @@ export async function getComments(){
   return comments;
   } catch (error) {
      console.log(error);  
+  }
+}
+
+
+//INFINITE POSTS
+export async function searchPosts({ searchTerm }: {searchTerm: string}) {
+  
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      [Query.search('caption',  searchTerm)]
+    )
+    if(!posts) throw Error;
+
+    return posts;
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+
+export async function getInfinitePosts({ pageParam }: {pageParam: number}) {
+  const queries: any[] = [Query.orderDesc('$updatedAt'), Query.limit(9)]
+
+  if (pageParam){
+    queries.push(Query.cursorAfter(pageParam.toString()))
+  }
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      queries
+    )
+    if(!posts) throw Error;
+    return posts;
+  } catch (error) {
+    console.log(error)
   }
 }
