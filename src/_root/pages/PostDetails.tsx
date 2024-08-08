@@ -23,10 +23,16 @@ const PostDetails = () => {
   const navigate = useNavigate();
   const { mutate: deletePost } = useDeletePost();
   const handleDeletePost = () => {
-    deletePost({ postId: id || "", imageId: post?.imageId || "" });
-    navigate(-1);
+    
+    if (user.id === post?.creator.$id) {
+      deletePost({ postId: id || "", imageId: post?.imageId || "" });
+      navigate(-1);
+    } else {
+      console.log('Unauthorized: You are not the creator of this post');
+    }
   };
-
+  
+  
   return (
     <div className="post_details-container">
       {isPending ? (
