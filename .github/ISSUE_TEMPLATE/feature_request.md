@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest a cool idea that AmarGram should have.
 title: ''
 labels: ''
 assignees: ''
