@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a report to help AmarGram improve and squash the bugs.
 title: ''
 labels: ''
 assignees: ''
