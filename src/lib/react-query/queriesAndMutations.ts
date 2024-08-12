@@ -1,5 +1,24 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createComment, createPost, createUserAccount, deletePost, getComments, getCurrentUser, getInfinitePosts, getPostById, getRecentPosts, likePost, savePost, searchPosts, signInAccount, signOutAccount, unsavePost, updatePost } from '../appwrite/api'
+import { createComment,
+         createPost,
+         createUserAccount,
+         deleteComment,
+         deletePost,
+         getCommentById,
+         getComments, 
+         getCurrentUser, 
+         getInfinitePosts, 
+         getPostById, 
+         getRecentPosts, 
+         getSaves, 
+         likePost, 
+         savePost, 
+         searchPosts, 
+         signInAccount, 
+         signOutAccount, 
+         unsavePost, 
+         updatePost, 
+         } from '../appwrite/api'
 import { INewComment, INewPost, INewUser, IUpdatePost } from '@/types'
 import { QUERY_KEYS } from './queryKeys'
 
@@ -63,6 +82,7 @@ export const useSavePost = () => {
         }
     })
 }
+
 export const useUnsavePost = () => {
     const queryClient = useQueryClient()
 
@@ -80,11 +100,16 @@ export const useUnsavePost = () => {
             queryKey: [QUERY_KEYS.GET_CURRENT_USER]
             })
         }
-    })
-    
-
-    
+    })   
 }
+
+export const useGetSaves = () =>{
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_SAVES],
+        queryFn: getSaves,
+    })
+}
+
 export const useLikePost = () => {
     const queryClient = useQueryClient()
 
@@ -116,7 +141,7 @@ export const useGetCurrentUser = () => {
       queryKey: [QUERY_KEYS.GET_CURRENT_USER],
       queryFn: getCurrentUser,
     });
-  };
+}
 
 export const useGetPostById = (postId: string) => {
     return useQuery({
@@ -167,6 +192,13 @@ export const useGetComments = () => {
         queryFn: getComments,
     })
 }
+export const useGetCommentById = (commentId: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_COMMENT_BY_ID, commentId],
+        queryFn: () => getCommentById(commentId),
+        enabled: !!commentId
+    })
+}
 
 
 export const useGetPosts = () => {
@@ -195,4 +227,16 @@ export const useSearchPosts = (searchTerm: string) => {
       queryFn: () => searchPosts({searchTerm}),
       enabled: !!searchTerm,
     });
-  };  
+  };
+
+export const useDeleteComment = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: ({commentId}: {commentId: string}) => deleteComment(commentId),
+        onSuccess:() => {
+            queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.GET_RECENT_POSTS]
+        })
+    }
+    })
+}

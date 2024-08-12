@@ -60,7 +60,10 @@ export async function saveUserToDB(user: {
 // ============================== SIGN IN
 export async function signInAccount(user: { email: string; password: string }) {
   try {
-    const session = await account.createEmailPasswordSession(user.email, user.password);
+    const session = await account.createEmailPasswordSession(
+      user.email,
+      user.password
+    );
 
     return session;
   } catch (error) {
@@ -206,39 +209,36 @@ export async function deleteFile(fileId: string) {
   }
 }
 
-
-export async function getRecentPosts(){
+export async function getRecentPosts() {
   const posts = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.postCollectionId,
-    [Query.orderDesc('$createdAt'), Query.limit(20)]
-  )
-  if(!posts) throw Error;
+    [Query.orderDesc("$createdAt"), Query.limit(20)]
+  );
+  if (!posts) throw Error;
 
-  return posts
+  return posts;
 }
 
-
-export async function likePost(postId: string, likesArray: string[]){
+export async function likePost(postId: string, likesArray: string[]) {
   try {
     const updatedPost = await databases.updateDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       postId,
       {
-        likes: likesArray
+        likes: likesArray,
       }
-    )
-    if(!updatedPost) throw Error
+    );
+    if (!updatedPost) throw Error;
 
-      return updatedPost
+    return updatedPost;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
 
-
-export async function savePost(postId: string, userId: string){
+export async function savePost(postId: string, userId: string) {
   try {
     const updatedPost = await databases.createDocument(
       appwriteConfig.databaseId,
@@ -246,68 +246,99 @@ export async function savePost(postId: string, userId: string){
       ID.unique(),
       {
         user: userId,
-        post: postId
+        post: postId,
       }
-    )
-    if(!updatedPost) throw Error
+    );
+    if (!updatedPost) throw Error;
 
-      return updatedPost
+    return updatedPost;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
 
+export async function getSaves() {
+  try {
+    const saves = databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.savesCollectionId,
+      [Query.orderDesc("$createdAt"), Query.limit(30)]
+    );
+    return saves;
+  } catch (error) {
+    console.log(error);
+  }
+}
 
-export async function unsavePost(savedRecordId: string){
+export async function unsavePost(savedRecordId: string) {
   try {
     const statusCode = await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
       savedRecordId
-    )
-    if(!statusCode) throw Error
+    );
+    if (!statusCode) throw Error;
 
-      return {status: 'Ok'}
+    return { status: "Ok" };
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
 
+export async function unsaveAllPostSaves(postId: string) {
+  try {
+    // Fetch all saves related to the post
+    const saves = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.savesCollectionId,
+      [Query.equal("post", postId)] // Adjust filter if needed
+    );
 
-export async function getPostById(postId: string){
+    if (saves?.documents) {
+      for (const save of saves.documents) {
+        await unsavePost(save.$id);
+      }
+    }
+
+    return { status: "Ok" };
+  } catch (error) {
+    console.error("Error unsaving all post saves:", error);
+    throw error; // Re-throw the error for further handling
+  }
+}
+
+export async function getPostById(postId: string) {
   try {
     const post = databases.getDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       postId
-    )
+    );
     return post;
-    
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
-
 
 export async function updatePost(post: IUpdatePost) {
   const hasFileToUpdate = post.file.length > 0;
   try {
     let image = {
       imageURL: post.imageURL,
-      imageId: post.imageId
-    }
+      imageId: post.imageId,
+    };
 
-    if(hasFileToUpdate){
+    if (hasFileToUpdate) {
       const uploadedFile = await uploadFile(post.file[0]);
 
       if (!uploadedFile) throw Error;
 
       const fileUrl = getFilePreview(uploadedFile.$id);
       if (!fileUrl) {
-      await deleteFile(uploadedFile.$id);
-      throw Error;
-    }
-    image = {...image, imageURL: fileUrl, imageId: uploadedFile.$id }
+        await deleteFile(uploadedFile.$id);
+        throw Error;
+      }
+      image = { ...image, imageURL: fileUrl, imageId: uploadedFile.$id };
     }
 
     const tags = post.tags?.replace(/ /g, "").split(",") || [];
@@ -337,24 +368,23 @@ export async function updatePost(post: IUpdatePost) {
   }
 }
 
+export async function deletePost(postId: string, imageId: string) {
+  if (!postId || !imageId) throw Error;
 
-export async function deletePost(postId: string, imageId: string){
-  if(!postId || !imageId) throw Error;
-  
   try {
     await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       postId
-    )
-    console.log('Post deleted successfully');
+    );
+    console.log("Post deleted successfully");
   } catch (error) {
-    console.log('Failed to delete post. Error: ', error)
+    console.log("Failed to delete post. Error: ", error);
   }
 }
 
 //  Comments
-export async function createComment(comment: INewComment){
+export async function createComment(comment: INewComment) {
   try {
     const newComment = await databases.createDocument(
       appwriteConfig.databaseId,
@@ -364,66 +394,109 @@ export async function createComment(comment: INewComment){
         comment: comment.comment,
         user: comment.user,
         post: comment.post,
-        username: comment.username
+        username: comment.username,
       }
-    )
-    if(!newComment){
+    );
+    if (!newComment) {
       throw Error;
     }
     return newComment;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
 
-
-export async function getComments(){
+export async function getComments() {
   try {
     const comments = databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.commentsCollectionId,
-      [Query.orderDesc('$createdAt'), Query.limit(30)]
-    )
-  return comments;
+      [Query.orderDesc("$createdAt"), Query.limit(30)]
+    );
+    return comments;
   } catch (error) {
-     console.log(error);  
+    console.log(error);
+  }
+}
+export async function getCommentById(commentId: string) {
+  try {
+    const comment = databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      commentId
+    );
+    return comment;
+  } catch (error) {
+    console.log(error);
   }
 }
 
-
 //INFINITE POSTS
-export async function searchPosts({ searchTerm }: {searchTerm: string}) {
-  
+export async function searchPosts({ searchTerm }: { searchTerm: string }) {
   try {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
-      [Query.search('caption',  searchTerm)]
-    )
-    if(!posts) throw Error;
+      [Query.search("caption", searchTerm)]
+    );
+    if (!posts) throw Error;
 
     return posts;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }
 
+export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
+  const queries: any[] = [Query.orderDesc("$updatedAt"), Query.limit(9)];
 
-export async function getInfinitePosts({ pageParam }: {pageParam: number}) {
-  const queries: any[] = [Query.orderDesc('$updatedAt'), Query.limit(9)]
-
-  if (pageParam){
-    queries.push(Query.cursorAfter(pageParam.toString()))
+  if (pageParam) {
+    queries.push(Query.cursorAfter(pageParam.toString()));
   }
   try {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       queries
-    )
-    if(!posts) throw Error;
+    );
+    if (!posts) throw Error;
     return posts;
   } catch (error) {
-    console.log(error)
+    console.log(error);
+  }
+}
+
+export async function deleteComment(commentId: string) {
+  if (!commentId) throw Error;
+
+  try {
+    await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      commentId
+    );
+    console.log("comment deleted");
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function deleteAllPostComments(postId: string) {
+  try {
+    // Fetch comments related to the specific post
+    const comments = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      [Query.equal("post", postId)] // Filter comments by postId
+    );
+
+    if (comments?.documents) {
+      for (const comment of comments.documents) {
+        await deleteComment(comment.$id); // Delete each comment by ID
+      }
+    }
+  } catch (error) {
+    console.error("Failed to delete all comments for post:", error);
+    throw error; // Handle errors appropriately
   }
 }

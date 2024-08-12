@@ -6,33 +6,52 @@ import {
   useDeletePost,
   useGetComments,
   useGetPostById,
+  useDeleteComment,
 } from "@/lib/react-query/queriesAndMutations";
 import { timeAgo } from "@/lib/utils";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Comments from "./Comments";
 import { Models } from "appwrite";
-
-import { Avatar, AvatarImage } from "@/components/ui/avatar"
-
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import {
+  deleteAllPostComments,
+  deleteFile,
+  unsaveAllPostSaves,
+} from "@/lib/appwrite/api";
 
 const PostDetails = () => {
   const { id } = useParams();
   const { data: post, isPending } = useGetPostById(id || "");
-  const { data: comments, isPending: isCommentLoading } = useGetComments();
+  const { isPending: isCommentLoading } = useGetComments();
   const { user } = useUserContext();
   const navigate = useNavigate();
   const { mutate: deletePost } = useDeletePost();
-  const handleDeletePost = () => {
-    
+  const { mutate: deleteComment } = useDeleteComment();
+
+  const handleDeletePost = async () => {
     if (user.id === post?.creator.$id) {
-      deletePost({ postId: id || "", imageId: post?.imageId || "" });
-      navigate(-1);
+      try {
+        await unsaveAllPostSaves(id || "");
+
+        // Delete all comments related to the post
+        await deleteAllPostComments(id || "");
+
+        await deleteFile(post.imageId || "");
+        // 3. Delete the post
+        await deletePost({ postId: id || "", imageId: post?.imageId || "" });
+        navigate(-1);
+      } catch (error) {
+        console.error("Error deleting post and associated data:", error);
+      }
     } else {
-      console.log('Unauthorized: You are not the creator of this post');
+      console.log("Unauthorized: You are not the creator of this post");
     }
   };
-  
-  
+
+  const handleDeleteComment = (commentId: string) => {
+    deleteComment({ commentId });
+  };
+
   return (
     <div className="post_details-container">
       {isPending ? (
@@ -58,7 +77,6 @@ const PostDetails = () => {
                   alt="creator"
                   className="w-12 lg:h-12 rounded-full"
                 />
-
                 <div className="flex flex-col">
                   <p className="base-medium lg:body-bold text-light-1">
                     {post?.creator.name}
@@ -94,7 +112,7 @@ const PostDetails = () => {
                 >
                   <img
                     src="/assets/icons/delete.svg"
-                    alt="delte button"
+                    alt="delete button"
                     height={24}
                     width={24}
                   />
@@ -105,11 +123,11 @@ const PostDetails = () => {
             <div className="flex flex-col flex-1 w-full small-medium lg:base-regular">
               <p className="base-medium lg:body-bold text-light-1">
                 {post?.caption}
-              </p>     
+              </p>
               <ul className={`flex gap-1 mt-2 ${post?.tags == 0 && "hidden"}`}>
-                {post?.tags.map((tag: string, index: string) => (
+                {post?.tags.map((tag: string, index: number) => (
                   <li
-                    key={`${tag}${index}`}
+                    key={`${tag}-${index}`}
                     className="text-light-3 small-regular"
                   >
                     #{tag}
@@ -118,34 +136,55 @@ const PostDetails = () => {
               </ul>
             </div>
 
-
-
             <div className="w-full">
               <PostStats post={post} userId={user.id} />
               <Comments />
-              {isCommentLoading && !comments ? (
+              {isCommentLoading ? (
                 <Loader />
               ) : (
-                <ul className="w-full max-w-2xl mx-auto py-8">
+                <ul className="w-full max-w-2xl mx-auto py-8 space-y-6">
                   {post?.comment.map((comment: Models.Document) => (
-                    <div className="space-y-6">
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="w-10 h-10 border border-muted-foreground/20">
-                            <AvatarImage src={comment.user.imageURL || "/assets/icons/profile-placeholder.svg"}></AvatarImage>
-                          </Avatar>
-                          <div>
-                          <div className="bg-muted rounded-md p-4 flex-1">
+                    <li key={comment.$id} className="space-y-4">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="w-10 h-10 border border-muted-foreground/20">
+                          <AvatarImage
+                            src={
+                              comment.user.imageURL ||
+                              "/assets/icons/profile-placeholder.svg"
+                            }
+                          />
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="bg-muted rounded-md p-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <div className="font-medium">{comment.user.username}</div>
-                              <div className="text-xs text-muted-foreground">{timeAgo(comment.$createdAt || "")}</div>
+                              <div className="font-medium">
+                                {comment.user.username}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {timeAgo(comment.$createdAt || "")}
+                              </div>
+                              {(comment.user.$id === user.id ||
+                                post?.creator.$id === user.id) && (
+                                <Button
+                                  onClick={() =>
+                                    handleDeleteComment(comment.$id)
+                                  }
+                                  className={`ghost_details-delete_btn`}
+                                >
+                                  <img
+                                    src="/assets/icons/delete.svg"
+                                    alt="delete button"
+                                    height={24}
+                                    width={24}
+                                  />
+                                </Button>
+                              )}
                             </div>
                             <p>{comment.comment}</p>
                           </div>
-                          </div>
                         </div>
                       </div>
-                    </div>
+                    </li>
                   ))}
                 </ul>
               )}
