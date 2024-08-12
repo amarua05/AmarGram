@@ -302,7 +302,7 @@ export async function unsaveAllPostSaves(postId: string) {
 
     return { status: "Ok" };
   } catch (error) {
-    console.error("Error unsaving all post saves:", error);
+    console.log(error);
     throw error; // Re-throw the error for further handling
   }
 }
@@ -379,7 +379,7 @@ export async function deletePost(postId: string, imageId: string) {
     );
     console.log("Post deleted successfully");
   } catch (error) {
-    console.log("Failed to delete post. Error: ", error);
+    console.log(error);
   }
 }
 
@@ -475,7 +475,6 @@ export async function deleteComment(commentId: string) {
       appwriteConfig.commentsCollectionId,
       commentId
     );
-    console.log("comment deleted");
   } catch (error) {
     console.log(error);
   }
@@ -496,7 +495,7 @@ export async function deleteAllPostComments(postId: string) {
       }
     }
   } catch (error) {
-    console.error("Failed to delete all comments for post:", error);
+    console.log(error);
     throw error; // Handle errors appropriately
   }
 }

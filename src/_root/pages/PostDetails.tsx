@@ -41,7 +41,7 @@ const PostDetails = () => {
         await deletePost({ postId: id || "", imageId: post?.imageId || "" });
         navigate(-1);
       } catch (error) {
-        console.error("Error deleting post and associated data:", error);
+        console.log(error);
       }
     } else {
       console.log("Unauthorized: You are not the creator of this post");

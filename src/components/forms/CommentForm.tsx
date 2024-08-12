@@ -12,8 +12,6 @@ const CommentForm = ({ comment }: CommentProps) => {
   const { mutate: deleteComment } = useDeleteComment();
   const { user } = useUserContext();
   const { data: post } = useGetPostById(id || '');
-  console.log('aa comment form');
-  console.log(comment.user.$id)
   if (!comment || !user || !post) {
     return null;
   }
