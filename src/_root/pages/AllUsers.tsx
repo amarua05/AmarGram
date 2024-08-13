@@ -7,7 +7,7 @@ import { useState } from "react";
 import useDebounce from "@/hooks/useDebounce";
 
 const AllUsers = () => {
-  const {data: users, fetchNextPage, hasNextPage} = useGetUsers();
+  const {data: users} = useGetUsers();
 
   const [searchValue, setSearchValue] = useState('');
   const debouncedValue = useDebounce(searchValue, 300);

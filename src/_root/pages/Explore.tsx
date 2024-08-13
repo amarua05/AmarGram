@@ -8,7 +8,7 @@ import PostSearchResults from "@/components/shared/PostSearchResults"
 
 
 const Explore = () => {
-  const {data: posts, fetchNextPage, hasNextPage} = useGetPosts();
+  const {data: posts} = useGetPosts();
 
   const [searchValue, setSearchValue] = useState('');
   const debouncedValue = useDebounce(searchValue, 300);
