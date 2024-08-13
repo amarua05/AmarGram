@@ -48,7 +48,7 @@
     // Handler
     const handleSubmit = async (value: z.infer<typeof postValidation>) => {
       // ACTION = UPDATE
-      if (post && action === "Update" && user.id == post.creator.id) {
+      if (post && action === "Update" && user.id == post.creator.$id) {
         const updatedPost = await updatePost({
           ...value,
           postId: post.$id,

@@ -11,9 +11,11 @@ import { createComment,
          getPostById, 
          getRecentPosts, 
          getSaves, 
+         getUsers, 
          likePost, 
          savePost, 
          searchPosts, 
+         searchUsers, 
          signInAccount, 
          signOutAccount, 
          unsavePost, 
@@ -217,7 +219,23 @@ export const useGetPosts = () => {
       initialPageParam: undefined, 
     });
   };
-  
+
+export const useGetUsers = () => {
+return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.GET_USERS],
+    queryFn: getUsers, 
+    getNextPageParam: (lastPage: any) => {
+    if (lastPage && lastPage.documents.length === 0) {
+        return null;
+    }
+
+
+    const lastId = lastPage.documents[lastPage.documents.length - 1].$id;
+    return lastId;
+    },
+    initialPageParam: undefined, 
+});
+};
   
   
 
@@ -228,6 +246,14 @@ export const useSearchPosts = (searchTerm: string) => {
       enabled: !!searchTerm,
     });
   };
+
+export const useSearchUsers = (searchTerm: string) => {
+return useQuery({
+    queryKey: [QUERY_KEYS.SEARCH_USERS, searchTerm],
+    queryFn: () => searchUsers({searchTerm}),
+    enabled: !!searchTerm,
+});
+};
 
 export const useDeleteComment = () => {
     const queryClient = useQueryClient()

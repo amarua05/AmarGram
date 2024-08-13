@@ -440,7 +440,7 @@ export async function searchPosts({ searchTerm }: { searchTerm: string }) {
       [Query.search("caption", searchTerm)]
     );
     if (!posts) throw Error;
-
+    
     return posts;
   } catch (error) {
     console.log(error);
@@ -449,7 +449,7 @@ export async function searchPosts({ searchTerm }: { searchTerm: string }) {
 
 export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
   const queries: any[] = [Query.orderDesc("$updatedAt"), Query.limit(9)];
-
+  
   if (pageParam) {
     queries.push(Query.cursorAfter(pageParam.toString()));
   }
@@ -468,7 +468,7 @@ export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
 
 export async function deleteComment(commentId: string) {
   if (!commentId) throw Error;
-
+  
   try {
     await databases.deleteDocument(
       appwriteConfig.databaseId,
@@ -488,7 +488,7 @@ export async function deleteAllPostComments(postId: string) {
       appwriteConfig.commentsCollectionId,
       [Query.equal("post", postId)] // Filter comments by postId
     );
-
+    
     if (comments?.documents) {
       for (const comment of comments.documents) {
         await deleteComment(comment.$id); // Delete each comment by ID
@@ -498,4 +498,30 @@ export async function deleteAllPostComments(postId: string) {
     console.log(error);
     throw error; // Handle errors appropriately
   }
+}
+
+export async function searchUsers({ searchTerm }: { searchTerm: string }) {
+  try {
+    const users = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.userCollectionId,
+      [Query.search("username", searchTerm)]
+    );
+    if (!users) throw Error;
+
+    return users;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getUsers() {
+  const users = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    [Query.orderDesc("$createdAt"), Query.limit(20)]
+  );
+  if (!users) throw Error;
+
+  return users;
 }

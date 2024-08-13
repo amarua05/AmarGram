@@ -4,7 +4,7 @@ import GridPostList from "./GridPostList"
 import { useGetPosts, useSearchPosts } from "@/lib/react-query/queriesAndMutations"
 import useDebounce from "@/hooks/useDebounce"
 import Loader from "@/components/shared/Loader"
-import SearchResults from "@/components/shared/SearchResults"
+import PostSearchResults from "@/components/shared/PostSearchResults"
 
 
 const Explore = () => {
@@ -58,7 +58,7 @@ const Explore = () => {
       </div>
       <div className="flex flex-wrap gap-9 w-full max-w-5xl">
         {shouldShowSearchResults ? (
-          <SearchResults 
+          <PostSearchResults 
                         searchedPosts={searchedPosts}  
                         isSearchFetching = {isSearchFetching}/>
         ) : shouldShowPosts ? (

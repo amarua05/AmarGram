@@ -1,14 +1,11 @@
-import { Models } from 'appwrite'
-import React from 'react'
 import Loader from './Loader'
 import GridPostList from '@/_root/pages/GridPostList'
-import { searchPosts } from '@/lib/appwrite/api'
 
 type SearchedResultProps = {
   isSearchFetching: boolean;
   searchedPosts: any;
 }
-const SearchResults = ({ isSearchFetching, searchedPosts }: SearchedResultProps) => {
+const PostSearchResults = ({ isSearchFetching, searchedPosts }: SearchedResultProps) => {
   if (isSearchFetching) return <Loader />;
 
   if (searchedPosts && searchedPosts.documents.length > 0)
@@ -23,4 +20,4 @@ const SearchResults = ({ isSearchFetching, searchedPosts }: SearchedResultProps)
   );
 };
 
-export default SearchResults;
+export default PostSearchResults;
