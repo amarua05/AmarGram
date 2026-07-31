@@ -1,4 +1,4 @@
-import { ID, ImageGravity, Query } from "appwrite";
+import { ID, Query } from "appwrite";
 import { appwriteConfig, account, databases, storage, avatars } from "./config";
 import { INewComment, INewPost, INewUser, IUpdatePost } from "@/types";
 
@@ -71,6 +71,29 @@ export async function signInAccount(user: { email: string; password: string }) {
   }
 }
 
+// ============================== VERIFY EMAIL
+export async function sendVerificationEmail(redirectUrl: string) {
+  try {
+    const verification = await account.createVerification(redirectUrl);
+
+    return verification;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function verifyUserEmail(userId: string, secret: string) {
+  try {
+    const verification = await account.updateVerification(userId, secret);
+
+    return verification;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 // ============================== GET ACCOUNT
 export function getAccount() {
   try {
@@ -122,13 +145,17 @@ export async function signOutAccount() {
 // ============================== CREATE POST
 export async function createPost(post: INewPost) {
   try {
+    if (!post.file || post.file.length === 0) {
+      throw new Error("Missing required parameter: file");
+    }
+
     // Upload file to appwrite storage
     const uploadedFile = await uploadFile(post.file[0]);
 
     if (!uploadedFile) throw Error;
 
     // Get file url
-    const fileUrl = getFilePreview(uploadedFile.$id);
+    const fileUrl = getFileView(uploadedFile.$id);
     if (!fileUrl) {
       await deleteFile(uploadedFile.$id);
       throw Error;
@@ -179,15 +206,12 @@ export async function uploadFile(file: File) {
 }
 
 // ============================== GET FILE URL
-export function getFilePreview(fileId: string) {
+
+export function getFileView(fileId: string) {
   try {
-    const fileUrl = storage.getFilePreview(
+    const fileUrl = storage.getFileView(
       appwriteConfig.storageId,
-      fileId,
-      2000,
-      2000,
-      ImageGravity.Top,
-      100
+      fileId
     );
 
     if (!fileUrl) throw Error;
@@ -197,6 +221,8 @@ export function getFilePreview(fileId: string) {
     console.log(error);
   }
 }
+
+// ...existing code...
 
 // ============================== DELETE FILE
 export async function deleteFile(fileId: string) {
@@ -240,7 +266,7 @@ export async function likePost(postId: string, likesArray: string[]) {
 
 export async function savePost(postId: string, userId: string) {
   try {
-    const updatedPost = await databases.createDocument(
+    const saved = await databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
       ID.unique(),
@@ -249,27 +275,42 @@ export async function savePost(postId: string, userId: string) {
         post: postId,
       }
     );
-    if (!updatedPost) throw Error;
 
-    return updatedPost;
+    return saved;
   } catch (error) {
     console.log(error);
   }
 }
 
-export async function getSaves() {
+export async function getSaves(userId: string) {
   try {
-    const saves = databases.listDocuments(
+    const saves = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
-      [Query.orderDesc("$createdAt"), Query.limit(30)]
+      [Query.equal("user", userId)]
     );
+
     return saves;
   } catch (error) {
     console.log(error);
+    return { documents: [] };
   }
 }
 
+export async function getPostById(postId: string) {
+  try {
+    const post = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    );
+
+    return post;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
 export async function unsavePost(savedRecordId: string) {
   try {
     const statusCode = await databases.deleteDocument(
@@ -307,19 +348,6 @@ export async function unsaveAllPostSaves(postId: string) {
   }
 }
 
-export async function getPostById(postId: string) {
-  try {
-    const post = databases.getDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      postId
-    );
-    return post;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 export async function updatePost(post: IUpdatePost) {
   const hasFileToUpdate = post.file.length > 0;
   try {
@@ -333,7 +361,7 @@ export async function updatePost(post: IUpdatePost) {
 
       if (!uploadedFile) throw Error;
 
-      const fileUrl = getFilePreview(uploadedFile.$id);
+      const fileUrl = getFileView(uploadedFile.$id);
       if (!fileUrl) {
         await deleteFile(uploadedFile.$id);
         throw Error;
@@ -526,12 +554,29 @@ export async function getUsers() {
   return users;
 }
 
+export async function getUserByUsername(username: string) {
+  try {
+    const user = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.userCollectionId,
+      [Query.equal("username", username), Query.limit(1)]
+    );
+
+    if (!user) throw Error;
+
+    return user.documents[0] || null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
 export async function getUserPosts(userId: string) {
   try {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
-      [Query.equal("creator.$id", userId)]
+      [Query.equal("creator.$id", userId), Query.orderDesc("$createdAt")]
     );
     if (!posts) throw Error;
     return posts;
@@ -539,3 +584,93 @@ export async function getUserPosts(userId: string) {
     console.log(error);
   }
 }
+
+// ============================================================
+// FOLLOWS
+// ============================================================
+
+// ============================== FOLLOW USER
+export async function followUser(followerId: string, followingId: string) {
+  try {
+    const follow = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.followsCollectionId,
+      ID.unique(),
+      {
+        follower: followerId,
+        following: followingId,
+      }
+    );
+
+    return follow;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// ============================== UNFOLLOW USER
+export async function unfollowUser(followRecordId: string) {
+  try {
+    const statusCode = await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.followsCollectionId,
+      followRecordId
+    );
+    if (!statusCode) throw Error;
+
+    return { status: "Ok" };
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// ============================== CHECK IF FOLLOWING (returns the follow doc or null)
+export async function getFollowStatus(followerId: string, followingId: string) {
+  try {
+    const result = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.followsCollectionId,
+      [
+        Query.equal("follower", followerId),
+        Query.equal("following", followingId),
+      ]
+    );
+
+    return result.documents[0] || null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+// ============================== GET FOLLOWERS (who follows this user)
+export async function getFollowers(userId: string) {
+  try {
+    const followers = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.followsCollectionId,
+      [Query.equal("following", userId)]
+    );
+
+    return followers;
+  } catch (error) {
+    console.log(error);
+    return { documents: [] };
+  }
+}
+
+// ============================== GET FOLLOWING (who this user follows)
+export async function getFollowing(userId: string) {
+  try {
+    const following = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.followsCollectionId,
+      [Query.equal("follower", userId)]
+    );
+
+    return following;
+  } catch (error) {
+    console.log(error);
+    return { documents: [] };
+  }
+} 

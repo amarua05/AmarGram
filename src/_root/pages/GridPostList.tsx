@@ -1,4 +1,5 @@
 import PostStats from '@/components/shared/PostStats';
+import FollowButton from '@/components/shared/FollowButton';
 import { useUserContext } from '@/context/AuthContext'
 import { Models } from 'appwrite';
 import { Link } from 'react-router-dom';
@@ -22,9 +23,14 @@ const GridPostList = ({ posts, showUser = true, showStats = true }: GridPostList
           </Link>
           <div className='grid-post_user'>
             {showUser && (
-              <div className='flex items-center justify-start gap-2 flex-1'>
-                <img src={post.creator.imageURL} alt="creator" className='h-8 w-8 rounded-full'/>
-                <p className='line-clamp-1'>@{post.creator.username}</p>
+              <div className='flex items-center justify-between flex-1 gap-2'>
+                <div className='flex items-center gap-2 min-w-0'>
+                  <img src={post.creator.imageURL} alt="creator" className='h-8 w-8 rounded-full shrink-0'/>
+                  <p className='line-clamp-1'>@{post.creator.username}</p>
+                </div>
+                <div>
+                  <FollowButton targetUserId={post.creator.$id} />
+                </div>
               </div>
             )}
             {showStats && <PostStats post={post} userId={user.id}/>}

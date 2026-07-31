@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { Camera } from "lucide-react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 
 import { Button } from "../ui/button";
@@ -6,20 +7,23 @@ import { convertFileToUrl } from "@/lib/utils";
 
 type FileUploaderProps = {
   fieldChange: (files: File[]) => void;
-  mediaUrl: string;
+  mediaUrl?: string;
+  compact?: boolean;
 };
 
-const FileUploader = ({ fieldChange, mediaUrl }: FileUploaderProps) => {
-  const [file, setFile] = useState<File[]>([]);
-  const [fileUrl, setFileUrl] = useState<string>(mediaUrl);
+const FileUploader = ({
+  fieldChange,
+  mediaUrl,
+  compact = false,
+}: FileUploaderProps) => {
+  const [fileUrl, setFileUrl] = useState<string | undefined>(mediaUrl);
 
   const onDrop = useCallback(
     (acceptedFiles: FileWithPath[]) => {
-      setFile(acceptedFiles);
       fieldChange(acceptedFiles);
       setFileUrl(convertFileToUrl(acceptedFiles[0]));
     },
-    [file]
+    [fieldChange]
   );
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -28,6 +32,29 @@ const FileUploader = ({ fieldChange, mediaUrl }: FileUploaderProps) => {
       "image/*": [".png", ".jpeg", ".jpg"],
     },
   });
+
+  if (compact) {
+    return (
+      <div {...getRootProps()} className="cursor-pointer">
+        <input {...getInputProps()} className="hidden" />
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className="h-9 w-9 rounded-full border border-dark-4 bg-dark-2 text-light-1 shadow-sm hover:bg-dark-3">
+          {fileUrl ? (
+            <img
+              src={fileUrl}
+              alt="uploaded preview"
+              className="h-full w-full rounded-full object-cover"
+            />
+          ) : (
+            <Camera className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div

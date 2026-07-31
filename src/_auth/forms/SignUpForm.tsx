@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { Link, useNavigate } from "react-router-dom"
 import { useToast } from "@/components/ui/use-toast"
-
-
+import { validateUsername } from "@/utils/validateUsername"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
@@ -18,16 +17,15 @@ import { Input } from "@/components/ui/input"
 import { signupValidation } from "@/lib/validation"
 import Loader from "@/components/shared/Loader"
 import { useCreateUserAccount, useSignInAccount } from "@/lib/react-query/queriesAndMutations"
-import { useUserContext } from "@/context/AuthContext"
+import { sendVerificationEmail } from "@/lib/appwrite/api"
+
 
 const SignUpForm = () => {
     const { toast } = useToast()
     const navigate = useNavigate()
-    const { checkAuthUser, isLoading: isUserLoading} = useUserContext()
 
-    const {mutateAsync: createUserAccount, isPending: isCreatingAccount} = useCreateUserAccount();
-
-    const {mutateAsync: signInAccount, isPending: isSigningIn} = useSignInAccount();
+    const { mutateAsync: createUserAccount, isPending: isCreatingAccount } = useCreateUserAccount();
+    const { mutateAsync: signInAccount } = useSignInAccount();
 
     const form = useForm<z.infer<typeof signupValidation>>({
     resolver: zodResolver(signupValidation),
@@ -39,28 +37,43 @@ const SignUpForm = () => {
     },
   })
  
-  // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof signupValidation>) {
-    const newUser = await createUserAccount(values)
-    
-    if(!newUser){
-      return toast({title: "Sign Up failed, please try again later."})
-    }
-    const session = await signInAccount({
-      email: values.email,
-      password: values.password
-  })
-    if(!session){
-      return toast({title: "Sign In failed, please try again later."})
-  }
-  const isLoggedIn = await checkAuthUser();
-  if(isLoggedIn){
-    form.reset();
+    const usernameValidation = validateUsername(values.username);
 
-    navigate('/')
-  } else{
-    return toast({title: "Sign Up failed, please try again later."})
-  }
+    if (!usernameValidation.valid) {
+      return toast({
+        title: usernameValidation.message,
+      });
+    }
+    const createdUser = await createUserAccount(values) as any;
+
+    if (!createdUser || typeof createdUser !== 'object') {
+      return toast({ title: "Sign Up failed, please try again later." })
+    }
+
+    try {
+      await signInAccount({
+        email: values.email,
+        password: values.password,
+      });
+
+      const redirectUrl = (
+        import.meta.env.VITE_APPWRITE_REDIRECT_URL
+      ).trim();
+
+      await sendVerificationEmail(redirectUrl);
+
+      form.reset();
+      navigate('/verify-email');
+      return toast({
+        title: "Account created. Check your email to verify it.",
+      });
+    } catch (error) {
+      console.error('Verification email failed to send:', error);
+      return toast({
+        title: "Account created, but verification email could not be sent.",
+      });
+    }
   }
   
   return (
@@ -124,7 +137,7 @@ const SignUpForm = () => {
             )}
           />
           <Button type="submit" className="shad-button_primary">
-            {isCreatingAccount || isSigningIn || isUserLoading ? 
+            {isCreatingAccount ? 
             (<div className="flex-center gap-2">
               <Loader /> Loading...
             </div>)

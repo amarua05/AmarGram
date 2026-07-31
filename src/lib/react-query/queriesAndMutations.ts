@@ -11,6 +11,8 @@ import { createComment,
          getPostById, 
          getRecentPosts, 
          getSaves, 
+         getUserByUsername,
+         getUserPosts,
          getUsers, 
          likePost, 
          savePost, 
@@ -19,7 +21,12 @@ import { createComment,
          signInAccount, 
          signOutAccount, 
          unsavePost, 
-         updatePost, 
+         updatePost,
+         followUser,
+         unfollowUser,
+         getFollowStatus,
+         getFollowers,
+         getFollowing,
          } from '../appwrite/api'
 import { INewComment, INewPost, INewUser, IUpdatePost } from '@/types'
 import { QUERY_KEYS } from './queryKeys'
@@ -105,10 +112,11 @@ export const useUnsavePost = () => {
     })   
 }
 
-export const useGetSaves = () =>{
+export const useGetSaves = (userId: string) => {
     return useQuery({
-        queryKey: [QUERY_KEYS.GET_SAVES],
-        queryFn: getSaves,
+        queryKey: [QUERY_KEYS.GET_SAVES, userId],
+        queryFn: () => getSaves(userId),
+        enabled: !!userId,
     })
 }
 
@@ -236,6 +244,22 @@ return useInfiniteQuery({
     initialPageParam: undefined, 
 });
 };
+
+export const useGetUserByUsername = (username: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_USER_BY_USERNAME, username],
+        queryFn: () => getUserByUsername(username),
+        enabled: !!username,
+    });
+};
+
+export const useGetUserPosts = (userId: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_USER_POSTS, userId],
+        queryFn: () => getUserPosts(userId),
+        enabled: !!userId,
+    });
+};
   
   
 
@@ -264,5 +288,68 @@ export const useDeleteComment = () => {
             queryKey: [QUERY_KEYS.GET_RECENT_POSTS]
         })
     }
+    })
+}
+export const useFollowUser = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({followerId, followingId}: {followerId: string; followingId: string}) =>
+        followUser(followerId, followingId),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_FOLLOW_STATUS, variables.followerId, variables.followingId]
+            })
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_FOLLOWERS, variables.followingId]
+            })
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_FOLLOWING, variables.followerId]
+            })
+        }
+    })
+}
+
+export const useUnfollowUser = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({followRecordId}: {followRecordId: string; followerId: string; followingId: string}) =>
+        unfollowUser(followRecordId),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_FOLLOW_STATUS, variables.followerId, variables.followingId]
+            })
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_FOLLOWERS, variables.followingId]
+            })
+            queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.GET_FOLLOWING, variables.followerId]
+            })
+        }
+    })
+}
+
+export const useGetFollowStatus = (followerId: string, followingId: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_FOLLOW_STATUS, followerId, followingId],
+        queryFn: () => getFollowStatus(followerId, followingId),
+        enabled: !!followerId && !!followingId,
+    })
+}
+
+export const useGetFollowers = (userId: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_FOLLOWERS, userId],
+        queryFn: () => getFollowers(userId),
+        enabled: !!userId,
+    })
+}
+
+export const useGetFollowing = (userId: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_FOLLOWING, userId],
+        queryFn: () => getFollowing(userId),
+        enabled: !!userId,
     })
 }

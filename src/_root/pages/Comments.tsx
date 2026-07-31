@@ -18,6 +18,7 @@ import Loader from "@/components/shared/Loader"
 import { useCreateComment, useGetPostById } from "@/lib/react-query/queriesAndMutations"
 import { useUserContext } from "@/context/AuthContext"
 import { useParams } from "react-router-dom"
+import { useEffect } from "react"
 
 const Comments = () => {
     const { toast } = useToast()
@@ -33,6 +34,11 @@ const Comments = () => {
       
     }
   })
+  useEffect(() => {
+  if (post?.$id) {
+    form.reset({ comment: "", post: post.$id });
+  }
+}, [post?.$id]);
  
   // 2. Define a submit handler.
   const handleSubmit = async(values: z.infer<typeof commentValidation>) => {
@@ -41,11 +47,11 @@ const Comments = () => {
       username: user.username,
       user: user.id,
     });
-    location.reload()
     if(!newComment){
       return toast({title: "Comment failed, please try again later."})
-    }
-  }
+    };
+    location.reload()
+  };
   
   return (
     <div>

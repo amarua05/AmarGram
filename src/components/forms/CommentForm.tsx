@@ -28,7 +28,7 @@ const CommentForm = ({ comment }: CommentProps) => {
       {isCreator && (
         <button 
         className={`ghost_details-delete_btn`}
-        onClick={() => deleteComment(comment?.comment.$id)}></button>
+        onClick={() => deleteComment({ commentId: comment.$id })}></button>
       )}
     </div>
   );

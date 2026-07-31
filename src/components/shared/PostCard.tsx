@@ -3,6 +3,7 @@ import { timeAgo } from "@/lib/utils";
 import { Models } from "appwrite";
 import { Link } from "react-router-dom";
 import PostStats from "./PostStats";
+import FollowButton from "./FollowButton";
 
 type PostCardProps = {
     post: Models.Document;
@@ -14,7 +15,7 @@ const PostCard = ({ post }: PostCardProps ) => {
     <div className="post-card">
       <div className="flex-between">
         <div className="flex items-center gap-3">
-          <Link to={`/profile/${post.creator.$username}`}>
+          <Link to={`/profile/${post.creator.username}`}>
             <img
               src={
                 post.creator?.imageURL ||
@@ -29,13 +30,14 @@ const PostCard = ({ post }: PostCardProps ) => {
             <p className="base-medium lg:body-bold text-light-1">
               {post.creator.name}
             </p>
+            <FollowButton targetUserId={post.creator.$id} />
             <div className="flex-center gap-2 text-light-3">
               <p className="subtle-semibold lg:small-regular ">
                 {timeAgo(post.$createdAt)}
               </p>
               •
               <p className="subtle-semibold lg:small-regular">
-                at {post.location} 
+                {post.location} 
               </p>
             </div>
           </div>

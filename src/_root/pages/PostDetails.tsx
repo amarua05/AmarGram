@@ -18,6 +18,7 @@ import {
   deleteFile,
   unsaveAllPostSaves,
 } from "@/lib/appwrite/api";
+import FollowButton from "@/components/shared/FollowButton";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -89,6 +90,7 @@ const PostDetails = () => {
                     <p className="subtle-semibold lg:small-regular">
                       at {post?.location}
                     </p>
+                    <FollowButton targetUserId={post?.creator.$id} />
                   </div>
                 </div>
               </Link>
@@ -137,7 +139,7 @@ const PostDetails = () => {
             </div>
 
             <div className="w-full">
-              <PostStats post={post} userId={user.id} />
+              <PostStats post={post ?? undefined} userId={user.id} />
               <Comments />
               {isCommentLoading ? (
                 <Loader />
