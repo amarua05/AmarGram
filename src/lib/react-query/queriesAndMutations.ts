@@ -136,7 +136,7 @@ export const useLikePostNew = () => {
 export const useUnlikePost = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ likeRecordId, postId }: { likeRecordId: string; postId: string }) =>
+    mutationFn: ({ likeRecordId }: { likeRecordId: string; postId: string }) =>
       unlikePost(likeRecordId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_LIKES, variables.postId] });
