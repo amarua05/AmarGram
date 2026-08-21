@@ -145,13 +145,13 @@ const PostDetails = () => {
                 <Loader />
               ) : (
                 <ul className="w-full max-w-2xl mx-auto py-8 space-y-6">
-                  {post?.comment.map((comment: Models.Document) => (
+                  {post?.comment?.map((comment: Models.Document) => (
                     <li key={comment.$id} className="space-y-4">
                       <div className="flex items-start gap-4">
                         <Avatar className="w-10 h-10 border border-muted-foreground/20">
                           <AvatarImage
                             src={
-                              comment.user.imageURL ||
+                              comment.user?.imageURL ||
                               "/assets/icons/profile-placeholder.svg"
                             }
                           />
@@ -160,12 +160,12 @@ const PostDetails = () => {
                           <div className="bg-muted rounded-md p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <div className="font-medium">
-                                {comment.user.username}
+                                {comment.user?.username}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {timeAgo(comment.$createdAt || "")}
                               </div>
-                              {(comment.user.$id === user.id ||
+                              {(comment.user?.$id === user.id ||
                                 post?.creator.$id === user.id) && (
                                 <Button
                                   onClick={() =>

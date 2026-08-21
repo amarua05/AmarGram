@@ -50,7 +50,7 @@ const SignInForm = () => {
 
     navigate('/')
   } else{
-    return toast({title: "Sign Up failed, please try again later."})
+    return toast({title: "Sign In failed, please try again later."})
   }
   }
   

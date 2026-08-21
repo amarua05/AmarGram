@@ -46,18 +46,19 @@ AmarGram is a social media web application built with modern web technologies, o
 To customize the configuration of AmarGram, modify the environment variables in the `.env.local` file:
 
 ```plaintext
-VITE_APPWRITE_URL = 'https://cloud.appwrite.io/v1'
+VITE_APPWRITE_URL = ''
+VITE_APPWRITE_REDIRECT_URL = ''
 
-VITE_APPWRITE_PROJECT_ID = '######'
+VITE_APPWRITE_PROJECT_ID = ''
+VITE_APPWRITE_DATABASE_ID = ''
+VITE_APPWRITE_STORAGE_ID = ''
 
-
-VITE_APPWRITE_DATABASE_ID = '######'
-VITE_APPWRITE_STORAGE_ID = '######'
-
-
-VITE_APPWRITE_SAVES_COLLECTION_ID = '######'
-VITE_APPWRITE_USER_COLLECTION_ID = '######'
-VITE_APPWRITE_POST_COLLECTION_ID = '######'
+VITE_APPWRITE_SAVES_COLLECTION_ID = ''
+VITE_APPWRITE_USER_COLLECTION_ID = ''
+VITE_APPWRITE_POST_COLLECTION_ID = ''
+VITE_APPWRITE_COMMENTS_COLLECTION_ID = ''
+VITE_APPWRITE_FOLLOWS_COLLECTION_ID = ''
+VITE_APPWRITE_LIKES_COLLECTION_ID = ''
 ```
 
 Adjust these values according to your setup.

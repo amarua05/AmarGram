@@ -25,4 +25,5 @@ export enum QUERY_KEYS{
   GET_FOLLOW_STATUS = "getFollowStatus",
   GET_FOLLOWERS = "getFollowers",
   GET_FOLLOWING = "getFollowing",
+  GET_LIKES = "GET_LIKES",
 }

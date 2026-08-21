@@ -95,15 +95,14 @@ export async function verifyUserEmail(userId: string, secret: string) {
 }
 
 // ============================== GET ACCOUNT
-export function getAccount() {
+export async function getAccount() {
   try {
-    const currentAccount = account.get();
-
+    const currentAccount = await account.get();
     return currentAccount;
   } catch (error) {
-    console.log(error);
+    return null;
   }
-}
+} 
 
 // ============================== GET USER
 export async function getCurrentUser() {
@@ -239,28 +238,68 @@ export async function getRecentPosts() {
   const posts = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.postCollectionId,
-    [Query.orderDesc("$createdAt"), Query.limit(20)]
+    [
+      Query.orderDesc("$createdAt"),
+      Query.limit(20),
+      Query.select([
+        "$id", "caption", "tags", "imageURL", "imageId", "location", "$createdAt",
+        "creator.$id", "creator.name", "creator.username", "creator.imageURL",
+      ]),
+    ]
   );
   if (!posts) throw Error;
-
   return posts;
+
 }
 
-export async function likePost(postId: string, likesArray: string[]) {
+export async function likePost(postId: string, userId: string) {
   try {
-    const updatedPost = await databases.updateDocument(
+    const like = await databases.createDocument(
       appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      postId,
-      {
-        likes: likesArray,
-      }
+      appwriteConfig.likesCollectionId,
+      ID.unique(),
+      { user: userId, post: postId }
     );
-    if (!updatedPost) throw Error;
-
-    return updatedPost;
+    return like;
   } catch (error) {
     console.log(error);
+  }
+}
+
+export async function unlikePost(likeRecordId: string) {
+  try {
+    await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.likesCollectionId,
+      likeRecordId
+    );
+    return { status: "Ok" };
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getLikes(postId: string) {
+  try {
+    const likes = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.likesCollectionId,
+      [
+        Query.equal("post", postId),
+        Query.select([
+          "$id",
+          "$createdAt",
+          "user.$id",
+          "user.name",
+          "user.username",
+          "user.imageURL",
+        ]),
+      ]
+    );
+    return likes;
+  } catch (error) {
+    console.log(error);
+    return { documents: [] };
   }
 }
 
@@ -287,14 +326,27 @@ export async function getSaves(userId: string) {
     const saves = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
-      [Query.equal("user", userId)]
+      [
+        Query.equal("user", userId),
+        Query.select([
+          "$id",
+          "post.$id",
+          "post.caption",
+          "post.imageURL",
+          "post.location",
+          "post.$createdAt",
+          "post.creator.$id",
+          "post.creator.username",
+          "post.creator.imageURL",
+        ]),
+      ]
     );
-
     return saves;
   } catch (error) {
     console.log(error);
     return { documents: [] };
   }
+
 }
 
 export async function getPostById(postId: string) {
@@ -302,9 +354,16 @@ export async function getPostById(postId: string) {
     const post = await databases.getDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
-      postId
+      postId,
+      [
+        Query.select([
+          "$id", "caption", "tags", "imageURL", "imageId", "location", "$createdAt",
+          "creator.$id", "creator.name", "creator.username", "creator.imageURL",
+          "comment.$id", "comment.comment", "comment.username", "comment.$createdAt",
+          "comment.user.$id", "comment.user.username", "comment.user.imageURL",
+        ]),
+      ]
     );
-
     return post;
   } catch (error) {
     console.log(error);
@@ -436,10 +495,23 @@ export async function createComment(comment: INewComment) {
 
 export async function getComments() {
   try {
-    const comments = databases.listDocuments(
+    const comments = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.commentsCollectionId,
-      [Query.orderDesc("$createdAt"), Query.limit(30)]
+      [
+        Query.orderDesc("$createdAt"),
+        Query.limit(30),
+        Query.select([
+          "$id",
+          "comment",
+          "username",
+          "$createdAt",
+          "user.$id",
+          "user.name",
+          "user.username",
+          "user.imageURL",
+        ]),
+      ]
     );
     return comments;
   } catch (error) {
@@ -461,14 +533,19 @@ export async function getCommentById(commentId: string) {
 
 //INFINITE POSTS
 export async function searchPosts({ searchTerm }: { searchTerm: string }) {
-  try {
+    try {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
-      [Query.search("caption", searchTerm)]
+      [
+        Query.search("caption", searchTerm),
+        Query.select([
+          "$id", "caption", "tags", "imageURL", "imageId", "location", "$createdAt",
+          "creator.$id", "creator.name", "creator.username", "creator.imageURL",
+        ]),
+      ]
     );
     if (!posts) throw Error;
-    
     return posts;
   } catch (error) {
     console.log(error);
@@ -476,8 +553,15 @@ export async function searchPosts({ searchTerm }: { searchTerm: string }) {
 }
 
 export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
-  const queries: any[] = [Query.orderDesc("$updatedAt"), Query.limit(9)];
-  
+  const queries: any[] = [
+    Query.orderDesc("$updatedAt"),
+    Query.limit(9),
+    Query.select([
+      "$id", "caption", "tags", "imageURL", "imageId", "location", "$createdAt", "$updatedAt",
+      "creator.$id", "creator.name", "creator.username", "creator.imageURL",
+    ]),
+  ];
+
   if (pageParam) {
     queries.push(Query.cursorAfter(pageParam.toString()));
   }
@@ -492,6 +576,7 @@ export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
   } catch (error) {
     console.log(error);
   }
+
 }
 
 export async function deleteComment(commentId: string) {
@@ -533,7 +618,10 @@ export async function searchUsers({ searchTerm }: { searchTerm: string }) {
     const users = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.search("username", searchTerm)]
+      [
+        Query.search("username", searchTerm),
+        Query.select(["$id", "name", "username", "bio", "imageURL", "$createdAt"]),
+      ]
     );
     if (!users) throw Error;
 
@@ -547,11 +635,16 @@ export async function getUsers() {
   const users = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.userCollectionId,
-    [Query.orderDesc("$createdAt"), Query.limit(20)]
+    [
+      Query.orderDesc("$createdAt"),
+      Query.limit(20),
+      Query.select(["$id", "name", "username", "bio", "imageURL", "$createdAt"]),
+    ]
   );
   if (!users) throw Error;
 
   return users;
+
 }
 
 export async function getUserByUsername(username: string) {
@@ -559,7 +652,11 @@ export async function getUserByUsername(username: string) {
     const user = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.equal("username", username), Query.limit(1)]
+      [
+        Query.equal("username", username),
+        Query.limit(1),
+        Query.select(["$id", "name", "username", "bio", "imageURL", "$createdAt"]),
+      ]
     );
 
     if (!user) throw Error;
@@ -569,6 +666,7 @@ export async function getUserByUsername(username: string) {
     console.log(error);
     return null;
   }
+
 }
 
 export async function getUserPosts(userId: string) {
@@ -576,13 +674,21 @@ export async function getUserPosts(userId: string) {
     const posts = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
-      [Query.equal("creator.$id", userId), Query.orderDesc("$createdAt")]
+      [
+        Query.equal("creator.$id", userId),
+        Query.orderDesc("$createdAt"),
+        Query.select([
+          "$id", "caption", "tags", "imageURL", "imageId", "location", "$createdAt",
+          "creator.$id", "creator.name", "creator.username", "creator.imageURL",
+        ]),
+      ]
     );
     if (!posts) throw Error;
     return posts;
   } catch (error) {
     console.log(error);
   }
+
 }
 
 // ============================================================
@@ -633,25 +739,34 @@ export async function getFollowStatus(followerId: string, followingId: string) {
       [
         Query.equal("follower", followerId),
         Query.equal("following", followingId),
+        Query.select(["$id"]),
       ]
     );
-
     return result.documents[0] || null;
   } catch (error) {
     console.log(error);
     return null;
   }
+
 }
 
 // ============================== GET FOLLOWERS (who follows this user)
 export async function getFollowers(userId: string) {
-  try {
+   try {
     const followers = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.followsCollectionId,
-      [Query.equal("following", userId)]
+      [
+        Query.equal("following", userId),
+        Query.select([
+          "$id",
+          "follower.$id",
+          "follower.name",
+          "follower.username",
+          "follower.imageURL",
+        ]),
+      ]
     );
-
     return followers;
   } catch (error) {
     console.log(error);
@@ -665,9 +780,17 @@ export async function getFollowing(userId: string) {
     const following = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.followsCollectionId,
-      [Query.equal("follower", userId)]
+      [
+        Query.equal("follower", userId),
+        Query.select([
+          "$id",
+          "following.$id",
+          "following.name",
+          "following.username",
+          "following.imageURL",
+        ]),
+      ]
     );
-
     return following;
   } catch (error) {
     console.log(error);

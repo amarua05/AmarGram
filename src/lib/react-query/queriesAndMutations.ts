@@ -27,6 +27,8 @@ import { createComment,
          getFollowStatus,
          getFollowers,
          getFollowing,
+         unlikePost,
+         getLikes,
          } from '../appwrite/api'
 import { INewComment, INewPost, INewUser, IUpdatePost } from '@/types'
 import { QUERY_KEYS } from './queryKeys'
@@ -120,31 +122,35 @@ export const useGetSaves = (userId: string) => {
     })
 }
 
-export const useLikePost = () => {
-    const queryClient = useQueryClient()
+export const useLikePostNew = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, userId }: { postId: string; userId: string }) =>
+      likePost(postId, userId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_LIKES, variables.postId] });
+    },
+  });
+};
 
-    return useMutation({
-        mutationFn: ({postId, likesArray}: {postId: string; likesArray: string[]}) =>
-        likePost(postId, likesArray),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({
-            queryKey: [QUERY_KEYS.GET_POST_BY_ID, data?.$id]
-            })
-            queryClient.invalidateQueries({
-            queryKey: [QUERY_KEYS.GET_RECENT_POSTS]
-            })
-            queryClient.invalidateQueries({
-            queryKey: [QUERY_KEYS.GET_POSTS]
-            })
-            queryClient.invalidateQueries({
-            queryKey: [QUERY_KEYS.GET_CURRENT_USER]
-            })
-        }
-    })
-    
+export const useUnlikePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ likeRecordId, postId }: { likeRecordId: string; postId: string }) =>
+      unlikePost(likeRecordId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_LIKES, variables.postId] });
+    },
+  });
+};
 
-    
-}
+export const useGetLikes = (postId: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_LIKES, postId],
+    queryFn: () => getLikes(postId),
+    enabled: !!postId,
+  });
+};
 
 export const useGetCurrentUser = () => {
     return useQuery({
@@ -186,11 +192,11 @@ export const useDeletePost = () => {
 export const useCreateComment = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (comment: INewComment) =>
+        mutationFn: (comment: INewComment) => 
         createComment(comment),
         onSuccess: () => {
             queryClient.invalidateQueries({
-            queryKey: [QUERY_KEYS.GET_RECENT_POSTS]
+                queryKey: [QUERY_KEYS.GET_COMMENTS]
             })
         }
     })

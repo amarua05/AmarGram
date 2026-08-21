@@ -1,7 +1,5 @@
 import { z } from "zod"
 import { useToast } from "@/components/ui/use-toast"
-
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
@@ -50,7 +48,7 @@ const Comments = () => {
     if(!newComment){
       return toast({title: "Comment failed, please try again later."})
     };
-    location.reload()
+    form.reset({ comment: "", post: post?.$id });
   };
   
   return (

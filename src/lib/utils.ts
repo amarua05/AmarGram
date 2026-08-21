@@ -21,11 +21,12 @@ export function timeAgo(dateString: string): string {
   if (weeks > 2) {
     return formatDate(date);
   }
+  if (seconds < 4) return "Just now";
   if (weeks > 0) return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
   if (days > 0) return days === 1 ? "1 day ago" : `${days} days ago`;
   if (hours > 0) return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
   if (minutes > 0) return minutes === 1 ? "1 minute ago" : `${minutes} minutes ago`;
-  return seconds === 1 ? "1 second ago" : `${seconds} seconds ago`;
+  return `${seconds} seconds ago`;
 }
 
 function formatDate(date: Date): string {
