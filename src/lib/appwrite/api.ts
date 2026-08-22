@@ -1,6 +1,6 @@
-import { ID, Query } from "appwrite";
+import { ID, Permission, Query, Role } from "appwrite";
 import { appwriteConfig, account, databases, storage, avatars } from "./config";
-import { INewComment, INewPost, INewUser, IUpdatePost } from "@/types";
+import { INewComment, INewPost, INewUser, IUpdatePost, IUpdateUser, IUser } from "@/types";
 
 // ============================================================
 // AUTH
@@ -359,8 +359,6 @@ export async function getPostById(postId: string) {
         Query.select([
           "$id", "caption", "tags", "imageURL", "imageId", "location", "$createdAt",
           "creator.$id", "creator.name", "creator.username", "creator.imageURL",
-          "comment.$id", "comment.comment", "comment.username", "comment.$createdAt",
-          "comment.user.$id", "comment.user.username", "comment.user.imageURL",
         ]),
       ]
     );
@@ -530,7 +528,31 @@ export async function getCommentById(commentId: string) {
     console.log(error);
   }
 }
-
+export async function getCommentsByPostId(postId: string) {
+  try {
+    const comments = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      [
+        Query.equal("post", postId),
+        Query.orderDesc("$createdAt"),
+        Query.limit(30),
+        Query.select([
+          "$id",
+          "comment",
+          "username",
+          "$createdAt",
+          "user.$id",
+          "user.username",
+          "user.imageURL",
+        ]),
+      ]
+    );
+    return comments;
+  } catch (error) {
+    console.log(error);
+  }
+}
 //INFINITE POSTS
 export async function searchPosts({ searchTerm }: { searchTerm: string }) {
     try {
@@ -695,7 +717,6 @@ export async function getUserPosts(userId: string) {
 // FOLLOWS
 // ============================================================
 
-// ============================== FOLLOW USER
 export async function followUser(followerId: string, followingId: string) {
   try {
     const follow = await databases.createDocument(
@@ -714,7 +735,6 @@ export async function followUser(followerId: string, followingId: string) {
   }
 }
 
-// ============================== UNFOLLOW USER
 export async function unfollowUser(followRecordId: string) {
   try {
     const statusCode = await databases.deleteDocument(
@@ -730,7 +750,6 @@ export async function unfollowUser(followRecordId: string) {
   }
 }
 
-// ============================== CHECK IF FOLLOWING (returns the follow doc or null)
 export async function getFollowStatus(followerId: string, followingId: string) {
   try {
     const result = await databases.listDocuments(
@@ -750,7 +769,6 @@ export async function getFollowStatus(followerId: string, followingId: string) {
 
 }
 
-// ============================== GET FOLLOWERS (who follows this user)
 export async function getFollowers(userId: string) {
    try {
     const followers = await databases.listDocuments(
@@ -774,8 +792,7 @@ export async function getFollowers(userId: string) {
   }
 }
 
-// ============================== GET FOLLOWING (who this user follows)
-export async function getFollowing(userId: string) {
+ export async function getFollowing(userId: string) {
   try {
     const following = await databases.listDocuments(
       appwriteConfig.databaseId,
@@ -796,4 +813,87 @@ export async function getFollowing(userId: string) {
     console.log(error);
     return { documents: [] };
   }
-} 
+}
+
+export async function uploadProfilePicture(file: File, accountId: string) {
+  const fileId = `avatar_${accountId}`;
+
+  try {
+    try {
+      await storage.deleteFile(appwriteConfig.storageId, fileId);
+    } catch {
+      // no existing file, nothing to delete — safe to ignore
+    }
+
+    const uploadedFile = await storage.createFile(
+      appwriteConfig.storageId,
+      fileId,
+      file,
+      [Permission.read(Role.any()), Permission.write(Role.user(accountId))]
+    );
+
+    const imageURL = storage.getFileView(appwriteConfig.storageId, fileId);
+
+    return { fileId: uploadedFile.$id, imageURL: imageURL.toString() };
+  } catch (error) {
+    console.log(error);
+  }
+}
+export async function updateUser(user: IUpdateUser): Promise<IUser> {
+  const hasFileToUpload = user.file.length > 0;
+
+  try {
+    let image = {
+      imageURL: user.imageURL,
+      imageId: user.imageId,
+    };
+
+   if (hasFileToUpload) {
+  const uploaded = await uploadProfilePicture(user.file[0], user.accountId);
+  if (!uploaded) throw new Error("Failed to upload avatar.");
+  image = { imageURL: uploaded.imageURL, imageId: uploaded.fileId }; // was uploaded.imageUrl
+}
+
+    await account.updateName(user.name);
+
+    if (user.email) {
+      if (!user.password) {
+        throw new Error("Password is required to update email.");
+      }
+      await account.updateEmail(user.email, user.password);
+    }
+
+    const updatedUser = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.userCollectionId,
+      user.userId,
+      {
+        name: user.name,
+        username: user.username,
+        bio: user.bio,
+        imageId: image.imageId,
+        imageURL: image.imageURL,
+        ...(user.email && { email: user.email }),
+      }
+    );
+
+    if (!updatedUser) {
+      throw new Error("Failed to update user document.");
+    }
+
+    // map Appwrite's raw Document shape into your app's IUser type
+    return {
+      id: updatedUser.$id,
+      accountId: updatedUser.accountId,
+      name: updatedUser.name,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      imageId: updatedUser.imageId,
+      imageURL: updatedUser.imageURL,
+      bio: updatedUser.bio,
+    } as IUser;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}

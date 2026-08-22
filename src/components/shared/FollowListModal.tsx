@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { useGetFollowers, useGetFollowing } from "@/lib/react-query/queriesAndMutations";
 import Loader from "./Loader";
+import FollowButton from "./FollowButton";
 
 type FollowListModalProps = {
   userId: string;
@@ -63,22 +64,33 @@ const FollowListModal = ({ userId, open, onOpenChange, defaultTab = "followers" 
             </p>
           ) : (
             list.map((u: any) => (
+              <div className="flex items-center justify-between w-full p-4">
+
               <Link
                 key={u.$id}
                 to={`/profile/${u.username}`}
                 onClick={() => onOpenChange(false)}
-                className="flex items-center gap-3 p-2 rounded-md hover:bg-dark-3 transition"
+                className=""
               >
-                <img
-                  src={u.imageURL || "/assets/icons/profile-placeholder.svg"}
-                  alt={u.username}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div>
-                  <p className="body-bold text-light-1">{u.name}</p>
-                  <p className="small-regular text-light-3">@{u.username}</p>
+                {/* Left: avatar + name/username */}
+                <div className="flex items-center gap-3">
+                  <img
+                    src={u.imageURL || "/assets/icons/profile-placeholder.svg"}
+                    alt={u.username}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div className="flex flex-col">
+                    <p className="body-bold text-light-1">{u.name}</p>
+                    <p className="small-regular text-light-3">@{u.username}</p>
+                  </div>
                 </div>
-              </Link>
+                </Link>
+                {/* Right: follow button */}
+                <div className="shrink-0" onClick={(e) => e.preventDefault()}>
+                  <FollowButton targetUserId={u.$id} />
+                </div>
+              
+              </div>
             ))
           )}
         </div>

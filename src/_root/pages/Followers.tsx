@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useGetUserByUsername, useGetFollowers } from "@/lib/react-query/queriesAndMutations";
 import Loader from "@/components/shared/Loader";
 import { Link } from "react-router-dom";
+import FollowButton from "@/components/shared/FollowButton";
 
 const Followers = () => {
   const { username } = useParams();
@@ -32,8 +33,10 @@ const Followers = () => {
                   className="w-10 h-10 rounded-full"
                 />
                 <div>
+
                   <p className="body-bold">{u.name}</p>
                   <p className="small-regular text-light-3">@{u.username}</p>
+                  <FollowButton targetUserId={u.$id} />
                 </div>
               </Link>
             </li>

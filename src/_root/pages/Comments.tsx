@@ -29,17 +29,15 @@ const Comments = () => {
     defaultValues: {
       comment:'',
       post: post?.$id,
-      
     }
   })
   
   useEffect(() => {
-  if (post?.$id) {
-    form.reset({ comment: "", post: post.$id });
-  }
-}, [post?.$id]);
+    if (post?.$id) {
+      form.reset({ comment: "", post: post.$id });
+    }
+  }, [post?.$id]);
  
-  // 2. Define a submit handler.
   const handleSubmit = async(values: z.infer<typeof commentValidation>) => {
     if (!isAuthenticated || !user?.id) {
       return toast({ title: "Please log in to comment." });
@@ -63,7 +61,7 @@ const Comments = () => {
       </p>
     );
   }
-  
+
   return (
     <div>
     <Form {...form}>
@@ -89,9 +87,9 @@ const Comments = () => {
              : 'Post'}
           </Button>
         </form>
+      </div>
+    </Form>
     </div>
-  </Form>
-  </div>
   )
 }
 

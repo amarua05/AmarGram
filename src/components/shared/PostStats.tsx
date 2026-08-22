@@ -57,7 +57,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
   };
 
   return (
-    <div className='flex justify-between items-center z-20'>
+    <div className='flex items-center z-20'>
       <div className='flex gap-2 mr-5'>
         <img
           src={isLiked ? '/assets/icons/liked.svg' : '/assets/icons/like.svg'}
@@ -68,7 +68,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
           className='cursor-pointer' />
         <p className='small-medium lg:base-medium'>{likes.length}</p>
       </div>
-      <div className='flex gap-2 mr-5'>
+      <div className='flex gap-1 mr-5'>
         <Link to={`/${post?.creator?.username}/posts/${post?.$id}`}>
           <img src="/assets/icons/comment.svg"
             alt="Comment"
@@ -78,7 +78,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
         </Link>
         <p className='small-medium lg:base-medium'>{post?.comment?.length}</p>
       </div>
-      <div className='flex gap-2 mr-5'>{isSavingPost || isUnsavingPost ? <Loader /> :
+      <div className='flex gap-2 ml-auto'>{isSavingPost || isUnsavingPost ? <Loader /> :
         <img src={isSaved ? '/assets/icons/saved.svg' : '/assets/icons/save.svg'}
           alt="save"
           onClick={handleSavePost}
