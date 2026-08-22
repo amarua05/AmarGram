@@ -13,12 +13,13 @@ import { AllUsers,
          PostDetails,
          Profile,
          Saved,
-         UpdateProfile }
+          }
                   from './_root/pages'
 import { Toaster } from "@/components/ui/toaster"
 import VerifyEmailPage from "./_auth/VerifyEmailPage"
 import Followers from './_root/pages/Followers'
 import Following from './_root/pages/Following'
+import EditProfile from './_root/pages/EditProfile'
 
 const App = () => {
   return (
@@ -46,7 +47,7 @@ const App = () => {
         <Route path='/update-post/:id' element={<EditPost />} />
         <Route path='/:username/posts/:id' element={<PostDetails />} />
         <Route path='/profile/:username/*' element={<Profile />} />
-        <Route path='/update-profile/:id' element={<UpdateProfile />} />
+        <Route path='/update-profile/' element={<EditProfile />} />
         <Route path='*' element={<NotFound />} />
         </Route>
       </Routes>

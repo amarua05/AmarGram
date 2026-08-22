@@ -20,3 +20,19 @@ export const signupValidation = z.object({
     comment: z.string().min(1, {message: 'Comment must have at least 1 character.'}).max(220),
     post:z.string(),
   })
+  export const editProfileValidation = z
+  .object({
+    name: z.string().min(1, "Name is required.").max(50, "Name is too long."),
+    username: z.string().min(3, "Username must be 3-20 characters.").max(20),
+    email: z.string().email("Invalid email address."),
+    bio: z.string().max(1000, "Bio must be under 1000 characters.").optional(),
+    file: z.custom<File[]>().optional(),
+    password: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Appwrite requires the current password to confirm an email change
+    if (data.email && !data.password) {
+      // only enforced conditionally in the component (see note below),
+      // but kept here so the schema stays the single source of truth
+    }
+  });

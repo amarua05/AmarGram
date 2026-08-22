@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useUserContext } from "@/context/AuthContext";
 import {
   useDeletePost,
-  useGetComments,
+  useGetCommentsByPostId,
   useGetPostById,
   useDeleteComment,
 } from "@/lib/react-query/queriesAndMutations";
@@ -19,11 +19,13 @@ import {
   unsaveAllPostSaves,
 } from "@/lib/appwrite/api";
 import FollowButton from "@/components/shared/FollowButton";
+import { databases, appwriteConfig } from "@/lib/appwrite/config";
+import { useEffect } from "react";
 
 const PostDetails = () => {
   const { id } = useParams();
   const { data: post, isPending } = useGetPostById(id || "");
-  const { isPending: isCommentLoading } = useGetComments();
+  const { data: comments, isPending: isCommentLoading } = useGetCommentsByPostId(id || "");
   const { user } = useUserContext();
   const navigate = useNavigate();
   const { mutate: deletePost } = useDeletePost();
@@ -52,7 +54,17 @@ const PostDetails = () => {
   const handleDeleteComment = (commentId: string) => {
     deleteComment({ commentId });
   };
-
+  useEffect(() => {
+  const debugCheck = async () => {
+    const doc = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      "6a8962a9003d8cb5afe8"
+    );
+    console.log("RAW comment doc:", doc);
+  };
+  debugCheck();
+}, []);
   return (
     <div className="post_details-container">
       {isPending ? (
@@ -121,7 +133,6 @@ const PostDetails = () => {
                 </Button>
               </div>
             </div>
-            <hr className="border w-full border-dark-4/80" />
             <div className="flex flex-col flex-1 w-full small-medium lg:base-regular">
               <p className="base-medium lg:body-bold text-light-1">
                 {post?.caption}
@@ -137,47 +148,49 @@ const PostDetails = () => {
                 ))}
               </ul>
             </div>
-
+            <hr className="border w-full border-dark-4/80" />
             <div className="w-full">
               <PostStats post={post ?? undefined} userId={user.id} />
-              <Comments />
+            <hr className="border w-full border-dark-4/80 mt-5" />
               {isCommentLoading ? (
                 <Loader />
               ) : (
+                <>
+                <Comments />
                 <ul className="w-full max-w-2xl mx-auto py-8 space-y-6">
-                  {post?.comment?.map((comment: Models.Document) => (
+                  {comments?.documents.map((comment: Models.Document) => (
+                    
                     <li key={comment.$id} className="space-y-4">
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-center gap-4">
                         <Avatar className="w-10 h-10 border border-muted-foreground/20">
                           <AvatarImage
-                            src={
-                              comment.user?.imageURL ||
-                              "/assets/icons/profile-placeholder.svg"
-                            }
+                              src={
+                                comment.user?.imageURL
+                              }
                           />
                         </Avatar>
                         <div className="flex-1">
                           <div className="bg-muted rounded-md p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <div className="font-medium">
-                                {comment.user?.username}
+                                {comment.username}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {timeAgo(comment.$createdAt || "")}
                               </div>
-                              {(comment.user?.$id === user.id ||
+                              {(comment.username === user.username ||
                                 post?.creator.$id === user.id) && (
                                 <Button
                                   onClick={() =>
                                     handleDeleteComment(comment.$id)
                                   }
-                                  className={`ghost_details-delete_btn`}
+                                  className={`ghost_details-delete_btn ml-auto`}
                                 >
                                   <img
                                     src="/assets/icons/delete.svg"
                                     alt="delete button"
-                                    height={24}
-                                    width={24}
+                                    height={15}
+                                    width={15}
                                   />
                                 </Button>
                               )}
@@ -189,6 +202,7 @@ const PostDetails = () => {
                     </li>
                   ))}
                 </ul>
+                </> 
               )}
             </div>
           </div>

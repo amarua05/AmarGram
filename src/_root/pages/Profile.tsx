@@ -5,6 +5,8 @@ import GridPostList from "./GridPostList";
 import { useGetFollowers, useGetFollowing } from "@/lib/react-query/queriesAndMutations";
 import FollowListModal from "@/components/shared/FollowListModal";
 import { useState } from "react";
+import FollowButton from "@/components/shared/FollowButton";
+import EditButton from "@/components/shared/EditButton";
 
 
 
@@ -89,6 +91,8 @@ const Profile = () => {
             />
             <p className="text-light-3">@{profileUser.username}</p>
             {profileUser.bio && <p className="max-w-xl text-light-2">{profileUser.bio}</p>}
+            <FollowButton targetUserId={profileUser.$id} />
+            <EditButton targetUserId={profileUser.$id} />
           </div>
         </div>
       </div>

@@ -6,13 +6,17 @@
   };
   
   export type IUpdateUser = {
-    userId: string;
-    name: string;
-    bio: string;
-    imageId: string;
-    imageURL: URL | string;
-    file: File[];
-  };
+  userId: string;
+  accountId: string;
+  name: string;
+  username: string;
+  bio?: string;
+  imageId: string;
+  imageURL: URL | string;
+  file: File[];
+  email?: string;     
+  password?: string; 
+};
   
   export type INewPost = {
     userId: string;
@@ -34,9 +38,11 @@
   
   export type IUser = {
     id: string;
+    accountId: string;
     name: string;
     username: string;
     email: string;
+    imageId: string;
     imageURL: string;
     bio: string;
   };
