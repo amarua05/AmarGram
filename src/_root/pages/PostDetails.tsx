@@ -19,8 +19,6 @@ import {
   unsaveAllPostSaves,
 } from "@/lib/appwrite/api";
 import FollowButton from "@/components/shared/FollowButton";
-import { databases, appwriteConfig } from "@/lib/appwrite/config";
-import { useEffect } from "react";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -54,17 +52,6 @@ const PostDetails = () => {
   const handleDeleteComment = (commentId: string) => {
     deleteComment({ commentId });
   };
-  useEffect(() => {
-  const debugCheck = async () => {
-    const doc = await databases.getDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.commentsCollectionId,
-      "6a8962a9003d8cb5afe8"
-    );
-    console.log("RAW comment doc:", doc);
-  };
-  debugCheck();
-}, []);
   return (
     <div className="post_details-container">
       {isPending ? (

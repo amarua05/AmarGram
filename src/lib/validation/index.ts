@@ -29,10 +29,9 @@ export const signupValidation = z.object({
     file: z.custom<File[]>().optional(),
     password: z.string().optional(),
   })
-  .superRefine((data, ctx) => {
-    // Appwrite requires the current password to confirm an email change
+  .superRefine((data) => {
+    
     if (data.email && !data.password) {
-      // only enforced conditionally in the component (see note below),
-      // but kept here so the schema stays the single source of truth
+
     }
   });

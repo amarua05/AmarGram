@@ -5,10 +5,9 @@ import { useNavigate } from "react-router-dom";
 
 type EditButtonProps = {
   targetUserId: string;
-  size?: "default" | "sm";
 };
 
-const EditButton = ({ targetUserId, size = "default"} : EditButtonProps) => {
+const EditButton = ({ targetUserId} : EditButtonProps) => {
     const { user } = useUserContext();
     const userId = user.id;
     const navigate = useNavigate();
