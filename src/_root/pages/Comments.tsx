@@ -21,7 +21,7 @@ import { useEffect } from "react"
 const Comments = () => {
     const { toast } = useToast()
     const {mutateAsync: createComment, isPending: isCreatingComment} = useCreateComment();
-    const { user } = useUserContext();
+    const { user, isAuthenticated } = useUserContext();
     const { id } = useParams();
     const { data: post} = useGetPostById(id || '');
     const form = useForm<z.infer<typeof commentValidation>>({
@@ -32,6 +32,7 @@ const Comments = () => {
       
     }
   })
+  
   useEffect(() => {
   if (post?.$id) {
     form.reset({ comment: "", post: post.$id });
@@ -40,6 +41,10 @@ const Comments = () => {
  
   // 2. Define a submit handler.
   const handleSubmit = async(values: z.infer<typeof commentValidation>) => {
+    if (!isAuthenticated || !user?.id) {
+      return toast({ title: "Please log in to comment." });
+    }
+
     const newComment = await createComment({
       ...values,
       username: user.username,

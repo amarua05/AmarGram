@@ -32,6 +32,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
 
   const handleLikePost = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!userId) return;
     if (!post?.$id) return;
 
     if (isLiked && userLikeRecord) {
@@ -43,11 +44,14 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
 
   const handleSavePost = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!userId) return;
+    if (!post?.$id) return;
+
     if (savedPostRecord) {
       setIsSaved(false);
       unsavePost(savedPostRecord.$id);
     } else {
-      savePost({ postId: post?.$id || '', userId });
+      savePost({ postId: post.$id, userId });
       setIsSaved(true);
     }
   };
