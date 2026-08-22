@@ -56,32 +56,37 @@ const Comments = () => {
     form.reset({ comment: "", post: post?.$id });
   };
   
+  if (!isAuthenticated) {
+    return (
+      <p className="small-regular text-light-3 mt-4 text-center">
+        Log in to leave a comment.
+      </p>
+    );
+  }
+  
   return (
     <div>
     <Form {...form}>
-      <div className="w-full justify-center text-center">
-        <p className="text-gray-400 small-medium md:base-regular mt-2">Leave A Comment.</p>
-      
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex gap-5 w-full mt-4 items-center justify-center">
+      <div className="flex-1 w-full justify-start text-center">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex w-full mt-4 items-center gap-2">
           <FormField
             control={form.control}
             name="comment"
             render={({ field }) => (
               <FormItem>
                 <FormControl className="w-full">
-                  <Input type="text" className="shad-input" {...field} />
+                  <Input type="text" placeholder='Add a comment...' className="shad-comment" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        
           <Button type="submit" className="shad-button_primary">
             {isCreatingComment  ? 
             (<div className="flex-center gap-2">
               <Loader /> Loading...
             </div>)
-             : 'Send'}
+             : 'Post'}
           </Button>
         </form>
     </div>
